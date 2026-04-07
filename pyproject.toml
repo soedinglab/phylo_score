@@ -1,0 +1,14 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+module-name = "phylo_score._phylo_score"
+
+[project]
+name = "phylo_score"
+version = "1.0.0"
+dependencies = ["numpy", "biopython", "scipy"]
+
+[project.urls]
+Repository = "https://github.com/soedinglab/phylo_score"
