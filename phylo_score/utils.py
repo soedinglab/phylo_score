@@ -1,4 +1,5 @@
 import numpy as np
+import scipy
 
 def all_pairs_numpy(k : int) -> tuple[np.ndarray, np.ndarray]:
     return np.triu_indices(k, k=1)
@@ -62,3 +63,36 @@ def average_sum_correction(s_matrix):
 
     apc = s_matrix - (cov_i[:, None] + cov_i[None, :] - cov)
     return apc - np.diag(np.diag(apc))
+
+def calc_scores(ind_ll, pair_ll, ind_reg, pair_reg, type : str):
+    if type == "lldiff":
+        return pair_ll - ind_ll
+    elif type == "optdiff":
+        return pair_ll - ind_ll - pair_reg + ind_reg
+    else:
+        raise ValueError(f"Unknown score type: {type}")
+    
+def calc_correction(scores, type : str):
+    if type == "APC":
+        return score_lin(average_product_correction(score_matrix(scores)))
+    elif type == "ASC":
+        return score_lin(average_sum_correction(score_matrix(scores)))
+    elif type == "None":
+        return scores
+    else:
+        raise ValueError(f"Unknown correction type: {type}")
+
+def p_values(scores):
+    sort_scores = np.sort(scores)
+
+    L = reverse_triangle_number(len(scores)) + 1
+
+    # Remove L//2 highest scores, because they might be positive
+    sort_scores = sort_scores[:-(L // 2)]
+
+
+    fit = scipy.stats.gamma.fit(sort_scores, method='mm')
+
+    p_vals = scipy.stats.gamma.sf(scores, *fit)
+
+    return p_vals
