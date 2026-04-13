@@ -8,6 +8,7 @@ def main():
     parser.add_argument("--alignment", help="Path to the alignment file.", required=True)
     parser.add_argument("--tree", help="Path to the phylogenetic tree file.", required=True)
     parser.add_argument("--output", help="Path to the output file.", required=True)
+    parser.add_argument("--num-threads", dest="num_threads", type=int, default=0, help="Number of threads to use. 0 meaning all available threads (default: %(default)s).")
     parser.add_argument(
         "--lambda",
         dest="lam",
@@ -46,6 +47,10 @@ def main():
         help="Type of correction to apply to the scores (default: %(default)s).",
     )
     args = parser.parse_args()
+    
+    if args.num_threads > 0:
+        import os
+        os.environ["RAYON_NUM_THREADS"] = str(args.num_threads)
 
     ind_ll, pair_ll, ind_reg, pair_reg = optimize_models(
         args.tree,
