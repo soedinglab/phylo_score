@@ -1,9 +1,23 @@
-rule download:
+rule decompress_rfam_seed:
+	input:
+		"data/Rfam.seed_v15.1.gz"
+	output:
+		"data/Rfam.seed_v15.1"
+	localrule: True
+	shell:
+		"gzip -cd {input} > {output}"
+
+rule extract_stockholm_alignment:
+	input:
+		"data/Rfam.seed_v15.1"
 	output:
 		"data/datasets/{dataset}.sto"
 	localrule: True
 	shell:
-		"wget -O {output} \"https://rfam.org/family/{wildcards.dataset}/alignment\""
+		"""
+		test -f {input}.ssi || esl-afetch --index {input}
+		esl-afetch {input} {wildcards.dataset} > {output}
+		"""
 
 rule prepare_rfam:
 	input:
