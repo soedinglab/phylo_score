@@ -1,0 +1,30 @@
+rule download:
+	output:
+		"data/datasets/{dataset}.sto"
+	localrule: True
+	shell:
+		"wget -O {output} \"https://rfam.org/family/{wildcards.dataset}/alignment\""
+
+rule prepare_rfam:
+	input:
+		"prepare_rfam.py",
+		"data/datasets/{dataset}.sto"
+	output:
+		"data/{dataset, [^/]+}/alignment.fasta",
+		"data/{dataset, [^/]+}/ss.txt",
+		"data/{dataset, [^/]+}/alignment.sto"
+	localrule: True
+	shell:
+		"python {input[0]} {input[1]} {output[0]} {output[1]} {output[2]}"
+
+rule phylogeny:
+	input:
+		"data/{dataset}/alignment.fasta"
+	output:
+		"data/{dataset, [^/]+}/raxml.newick"
+	threads: 16
+	resources:
+		mem_mb = 10000,
+		runtime = 100
+	shell:
+		"raxml-ng --msa {input} --model GTR+G --prefix {output} --seed 1 --redo --msa-format fasta --blopt nr_safe && mv {output}.raxml.bestTree {output}"
