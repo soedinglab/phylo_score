@@ -42,3 +42,16 @@ rule phylogeny:
 		runtime = 100
 	shell:
 		"raxml-ng --msa {input} --model GTR+G --prefix {output} --seed 1 --redo --msa-format fasta --blopt nr_safe && mv {output}.raxml.bestTree {output}"
+
+rule run_phylo_score:
+    input:
+        "data/{dataset}/alignment.fasta",
+        "data/{dataset}/raxml.newick"
+    output:
+        "data/{dataset, [^/]+}/reg{reg}_mireg{mireg}_score{score}_corr{corr}.npz"
+    threads: 64
+    resources:
+        mem_mb = 100000,
+        runtime = 10000
+    shell:
+        "python -m phylo_score --alignment {input[0]} --tree {input[1]} --lambda {wildcards.reg} --lambda-mi {wildcards.mireg} --score-type {wildcards.score} --correction {wildcards.corr} --output {output}"
