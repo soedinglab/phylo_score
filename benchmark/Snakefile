@@ -1,47 +1,47 @@
 rule decompress_rfam_seed:
-	input:
-		"data/Rfam.seed_v15.1.gz"
-	output:
-		"data/Rfam.seed_v15.1"
-	localrule: True
-	shell:
-		"gzip -cd {input} > {output}"
+    input:
+        "data/Rfam.seed_v15.1.gz"
+    output:
+        "data/Rfam.seed_v15.1"
+    localrule: True
+    shell:
+        "gzip -cd {input} > {output}"
 
 rule extract_stockholm_alignment:
-	input:
-		"data/Rfam.seed_v15.1"
-	output:
-		"data/datasets/{dataset}.sto"
-	localrule: True
-	shell:
-		"""
-		test -f {input}.ssi || esl-afetch --index {input}
-		esl-afetch {input} {wildcards.dataset} > {output}
-		"""
+    input:
+        "data/Rfam.seed_v15.1"
+    output:
+        "data/datasets/{dataset}.sto"
+    localrule: True
+    shell:
+        """
+        test -f {input}.ssi || esl-afetch --index {input}
+        esl-afetch {input} {wildcards.dataset} > {output}
+        """
 
 rule prepare_rfam:
-	input:
-		"prepare_rfam.py",
-		"data/datasets/{dataset}.sto"
-	output:
-		"data/{dataset, [^/]+}/alignment.fasta",
-		"data/{dataset, [^/]+}/ss.txt",
-		"data/{dataset, [^/]+}/alignment.sto"
-	localrule: True
-	shell:
-		"python {input[0]} {input[1]} {output[0]} {output[1]} {output[2]}"
+    input:
+        "prepare_rfam.py",
+        "data/datasets/{dataset}.sto"
+    output:
+        "data/{dataset, [^/]+}/alignment.fasta",
+        "data/{dataset, [^/]+}/ss.txt",
+        "data/{dataset, [^/]+}/alignment.sto"
+    localrule: True
+    shell:
+        "python {input[0]} {input[1]} {output[0]} {output[1]} {output[2]}"
 
 rule phylogeny:
-	input:
-		"data/{dataset}/alignment.fasta"
-	output:
-		"data/{dataset, [^/]+}/raxml.newick"
-	threads: 16
-	resources:
-		mem_mb = 10000,
-		runtime = 100
-	shell:
-		"raxml-ng --msa {input} --model GTR+G --prefix {output} --seed 1 --redo --msa-format fasta --blopt nr_safe && mv {output}.raxml.bestTree {output}"
+    input:
+        "data/{dataset}/alignment.fasta"
+    output:
+        "data/{dataset, [^/]+}/raxml.newick"
+    threads: 16
+    resources:
+        mem_mb = 10000,
+        runtime = 100
+    shell:
+        "raxml-ng --msa {input} --model GTR+G --prefix {output} --seed 1 --redo --msa-format fasta --blopt nr_safe && mv {output}.raxml.bestTree {output}"
 
 rule run_phylo_score:
     input:
@@ -55,3 +55,21 @@ rule run_phylo_score:
         runtime = 10000
     shell:
         "python -m phylo_score --alignment {input[0]} --tree {input[1]} --lambda {wildcards.reg} --lambda-mi {wildcards.mireg} --score-type {wildcards.score} --correction {wildcards.corr} --output {output}"
+
+RF = list(map(str.strip, open("3d.txt", "r")))
+
+rule hyperparameter_collection:
+    input:
+        eval = expand(
+            "data/{dataset}/reg{reg}_mireg{mireg}_score{score}_corr{corr}.npz",
+            dataset = RF,
+            score = ["optdiff"],
+            corr = ["APC"],
+            reg = [0.5],
+            mireg = [0.01],
+        ),
+    output:
+        "data/hyper_temp.txt",
+    localrule: True
+    shell:
+        "touch {output}"

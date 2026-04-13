@@ -1,8 +1,7 @@
 import argparse
-import utils
 import numpy as np
 
-from . import optimize_models
+from . import optimize_models, utils
 
 def main():
     parser = argparse.ArgumentParser(description="Compute co-evolution scores using phylogeny.")

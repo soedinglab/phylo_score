@@ -63,19 +63,16 @@ def optimize_models(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     cache_root = Path(cache_dir) if cache_dir is not None else _default_cache_dir()
     cache_key = _optimize_models_cache_key(tree_path, alignment_path, reg_strength, mi_strength)
-    cache_path = cache_root / f"{cache_key}.npz"
+    cache_path = f"{cache_root}/{cache_key}.npz"
 
-    if cache_path.exists():
-        try:
-            with np.load(cache_path) as cached:
-                return (
+    if Path(cache_path).exists():
+        cached = np.load(cache_path)
+        return (
                     np.array(cached["ind_ll"], copy=True),
                     np.array(cached["pair_ll"], copy=True),
                     np.array(cached["ind_reg"], copy=True),
                     np.array(cached["pair_reg"], copy=True),
                 )
-        except (OSError, KeyError, ValueError):
-            cache_path.unlink(missing_ok=True)
 
     arrays = tuple(
         np.asarray(values)
