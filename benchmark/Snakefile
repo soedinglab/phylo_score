@@ -91,3 +91,23 @@ rule extract_rscape:
 	localrule: True
 	script:
 		"extract_rscape.py"
+
+rule eval:
+    input:
+        scores = "data/{dataset}/reg{reg}_mireg{mireg}_score{score}_corr{corr}.npz",
+        ss = "data/{dataset}/ss.txt",
+    output:
+        "data/{dataset}/eval_reg{reg}_mireg{mireg}_score{score}_corr{corr}.txt"
+    localrule: True
+    script:
+        "eval.py"
+
+rule eval_rscape:
+    input:
+        scores = "data/{dataset}/rscape_{score}.npz",
+        ss = "data/{dataset}/ss.txt",
+    output:
+        "data/{dataset}/eval_rscape_{score}.txt"
+    localrule: True
+    script:
+        "eval.py"
