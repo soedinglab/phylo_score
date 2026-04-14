@@ -3,3 +3,4 @@ __pycache__
 _phylo_score*
 benchmark/.snakemake
 benchmark/data
+benchmark/phylo_score_cache
