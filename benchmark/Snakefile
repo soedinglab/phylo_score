@@ -73,3 +73,21 @@ rule hyperparameter_collection:
     localrule: True
     shell:
         "touch {output}"
+
+rule rscape:
+	input:
+		"data/{dataset}/alignment.sto"
+	output:
+		"data/{dataset}/rscape/{score}.cov"
+	localrule: True
+	shell:
+		"./R-scape -E 1001 --outdir data/{wildcards.dataset}/rscape --gapthresh 1.0 --outname {wildcards.score} --{wildcards.score} {input}"
+
+rule extract_rscape:
+	input:
+		rscape = "data/{dataset}/rscape/{score}.cov"
+	output:
+		"data/{dataset}/rscape_{score}.npz"
+	localrule: True
+	script:
+		"extract_rscape.py"
