@@ -107,7 +107,7 @@ rscape_scores = ["GTp", "GT", "GTa", "CHIa", "CHIp", "CHI", "MIa", "MIp", "MI", 
 rule eval_rscape:
     input:
         scores = expand("data/{dataset}/rscape_{score}.npz", score = rscape_scores, dataset = RF),
-        ss = expand("data/{dataset}/ss.txt", dataset = RF, score = rscape_scores),
+        ss = expand("data/{dataset}/ss.txt", dataset = RF),
     output:
         "data/eval_rscape.pickle"
     localrule: True

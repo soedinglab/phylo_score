@@ -79,7 +79,9 @@ def analyse_rscape_file_name(rscape_file : str):
 
 all_eval = {}
 
-for score, ss in zip(snakemake.input.scores, snakemake.input.ss):
+import itertools
+
+for score, ss in zip(snakemake.input.scores, itertools.cycle(snakemake.input.ss)):
     roc, ap = roc_avarage_precision(score, ss)
     if "rscape" in str(snakemake.output):
         para = analyse_rscape_file_name(score)
