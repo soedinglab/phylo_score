@@ -46,7 +46,49 @@ def roc_avarage_precision(score_file : str, ss_file :str):
 
     return roc, ap
 
-with open(snakemake.output[0], 'w') as f:
-    roc, ap = roc_avarage_precision(snakemake.input.scores, snakemake.input.ss)
-    f.write(f"ROC AUC: {roc}\n")
-    f.write(f"Average Precision: {ap}\n")
+def analyse_score_file_name(score_file : str):
+    """
+        Given a score file name, extract the dataset, the regularization, the score type and the correction type.
+    """
+    import re
+    pattern = r"data/([^/]+)/reg([^_]+)_mireg([^_]+)_score([^_]+)_corr([^\.]+)\.npz"
+    match = re.match(pattern, score_file)
+    if match:
+        dataset = match.group(1)
+        reg = match.group(2)
+        mireg = match.group(3)
+        score_type = match.group(4)
+        corr_type = match.group(5)
+        return dataset, reg, mireg, score_type, corr_type
+    else:
+        raise ValueError(f"Score file name {score_file} does not match the expected pattern.")
+    
+def analyse_rscape_file_name(rscape_file : str):
+    """
+        Given a rscape file name, extract the dataset and the score type.
+    """
+    import re
+    pattern = r"data/([^/]+)/rscape_([^\.]+)\.npz"
+    match = re.match(pattern, rscape_file)
+    if match:
+        dataset = match.group(1)
+        score = match.group(2)
+        return dataset, score
+    else:
+        raise ValueError(f"Rscape file name {rscape_file} does not match the expected pattern.")
+
+all_eval = {}
+
+for score, ss in zip(snakemake.input.scores, snakemake.input.ss):
+    roc, ap = roc_avarage_precision(score, ss)
+    if "rscape" in str(snakemake.output):
+        para = analyse_rscape_file_name(score)
+        all_eval[para] = (roc, ap)
+    else:
+        para = analyse_score_file_name(score)
+        all_eval[para] = (roc, ap)
+
+import pickle
+
+with open(snakemake.output[0], 'wb') as f:
+    pickle.dump(all_eval, f)

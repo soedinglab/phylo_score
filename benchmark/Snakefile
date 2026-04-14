@@ -51,7 +51,7 @@ rule run_phylo_score:
         "data/{dataset, [^/]+}/reg{reg}_mireg{mireg}_score{score}_corr{corr}.npz"
     threads: 64
     resources:
-        mem_mb = 100000,
+        mem_mb = 200000,
         runtime = 10000
     shell:
         "python -m phylo_score --alignment {input[0]} --tree {input[1]} --lambda {wildcards.reg} --lambda-mi {wildcards.mireg} --score-type {wildcards.score} --correction {wildcards.corr} --output {output}"
@@ -102,12 +102,14 @@ rule eval:
     script:
         "eval.py"
 
+rscape_scores = ["GTp", "GT", "GTa", "CHIa", "CHIp", "CHI", "MIa", "MIp", "MI", "MIr", "MIrp", "MIra", "MIg", "MIgp", "MIga", "OMES", "OMESa", "OMESp", "CCFp", "CCFa", "CCF"]
+
 rule eval_rscape:
     input:
-        scores = "data/{dataset}/rscape_{score}.npz",
-        ss = "data/{dataset}/ss.txt",
+        scores = expand("data/{dataset}/rscape_{score}.npz", score = rscape_scores, dataset = RF),
+        ss = expand("data/{dataset}/ss.txt", dataset = RF, score = rscape_scores),
     output:
-        "data/{dataset}/eval_rscape_{score}.txt"
+        "data/eval_rscape.pickle"
     localrule: True
     script:
         "eval.py"
