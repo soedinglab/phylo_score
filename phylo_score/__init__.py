@@ -13,7 +13,7 @@ _CACHE_NAMESPACE = b"phylo_score.optimize_models.v1"
 
 
 def _default_cache_dir() -> Path:
-    return "./phylo_score_cache"
+    return Path("./phylo_score_cache")
 
 
 def _update_hash_with_bytes(sha1: "hashlib._Hash", label: bytes, value: bytes) -> None:
@@ -63,9 +63,9 @@ def optimize_models(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     cache_root = Path(cache_dir) if cache_dir is not None else _default_cache_dir()
     cache_key = _optimize_models_cache_key(tree_path, alignment_path, reg_strength, mi_strength)
-    cache_path = f"{cache_root}/{cache_key}.npz"
+    cache_path = cache_root / f"{cache_key}.npz"
 
-    if Path(cache_path).exists():
+    if cache_path.exists():
         cached = np.load(cache_path)
         return (
                     np.array(cached["ind_ll"], copy=True),
@@ -74,15 +74,7 @@ def optimize_models(
                     np.array(cached["pair_reg"], copy=True),
                 )
 
-    arrays = tuple(
-        np.asarray(values)
-        for values in _phylo_score.optimize_models(
-            str(tree_path),
-            str(alignment_path),
-            reg_strength,
-            mi_strength,
-        )
-    )
+    arrays = _phylo_score.optimize_models(str(tree_path), str(alignment_path), reg_strength, mi_strength)
     _write_cache_file(cache_path, arrays)
     return arrays
 
