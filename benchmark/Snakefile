@@ -119,3 +119,23 @@ rule eval_phyloscore:
     localrule: True
     script:
         "eval.py"
+
+rule eval_joint:
+    input:
+        scores = expand("data/{dataset}/reg0.5_mireg0.0_scoreoptdiff_corrAPC.npz", dataset = RF),
+        ss = expand("data/{dataset}/ss.txt", dataset = RF),
+    output:
+        "data/eval_joint_phyloscore.pickle"
+    localrule: True
+    script:
+        "eval_joint.py"
+    
+rule eval_joint_rscape:
+    input:
+        scores = expand("data/{dataset}/rscape_GTp.npz", score = rscape_scores, dataset = RF),
+        ss = expand("data/{dataset}/ss.txt", dataset = RF),
+    output:
+        "data/eval_joint_rscape.pickle"
+    localrule: True
+    script:
+        "eval_joint.py"
