@@ -83,6 +83,9 @@ def calc_correction(scores, type : str):
         raise ValueError(f"Unknown correction type: {type}")
 
 def p_values(scores):
+
+    assert(scores == scores).all()
+    
     sort_scores = np.sort(scores)
 
     L = reverse_triangle_number(len(scores)) + 1
@@ -91,7 +94,9 @@ def p_values(scores):
     sort_scores = sort_scores[:-(L // 2)]
 
 
-    fit = scipy.stats.gamma.fit(sort_scores, method='mm')
+    fit = scipy.stats.gamma.fit(sort_scores, method='mle')
+    
+    print(fit)
 
     p_vals = scipy.stats.gamma.sf(scores, *fit)
 

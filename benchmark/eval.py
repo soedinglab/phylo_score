@@ -83,6 +83,7 @@ import itertools
 
 for score, ss in zip(snakemake.input.scores, itertools.cycle(snakemake.input.ss)):
     roc, ap = roc_avarage_precision(score, ss)
+    print(f"Score file: {score}, ROC AUC: {roc}, Average Precision: {ap}, ss file: {ss}")
     if "rscape" in str(snakemake.output):
         para = analyse_rscape_file_name(score)
         all_eval[para] = (roc, ap)
