@@ -43,18 +43,31 @@ rule phylogeny:
     shell:
         "raxml-ng --msa {input} --model GTR+G --prefix {output} --seed 1 --redo --msa-format fasta --blopt nr_safe && mv {output}.raxml.bestTree {output}"
 
+# This will only do the cheap calculation of corrections and p_values.
 rule run_phylo_score:
+    input:
+        "data/{dataset}/alignment.fasta",
+        "data/{dataset}/raxml.newick",
+        "data/{dataset, [^/]+}/reg{reg}_mireg{mireg}_cache.npz"
+    output:
+        "data/{dataset, [^/]+}/reg{reg}_mireg{mireg}_score{score}_corr{corr}.npz"
+    shell:
+        "python -m phylo_score --alignment {input[0]} --tree {input[1]} --lambda {wildcards.reg} --lambda-mi {wildcards.mireg} --score-type {wildcards.score} --correction {wildcards.corr} --output {output}"
+
+# We first run phylo_score to populate the cache which is the expensive run.
+# This depends only on the regularization strength and not correction and score type.
+rule run_phylo_score_cache:
     input:
         "data/{dataset}/alignment.fasta",
         "data/{dataset}/raxml.newick"
     output:
-        "data/{dataset, [^/]+}/reg{reg}_mireg{mireg}_score{score}_corr{corr}.npz"
+        "data/{dataset, [^/]+}/reg{reg}_mireg{mireg}_cache.npz"
     threads: 64
     resources:
         mem_mb = 200000,
         runtime = 10000
     shell:
-        "python -m phylo_score --alignment {input[0]} --tree {input[1]} --lambda {wildcards.reg} --lambda-mi {wildcards.mireg} --score-type {wildcards.score} --correction {wildcards.corr} --output {output}"
+        "python -m phylo_score --alignment {input[0]} --tree {input[1]} --lambda {wildcards.reg} --lambda-mi {wildcards.mireg} --score-type optdiff --correction APC --output {output}"
 
 RF = list(map(str.strip, open("3d.txt", "r")))
 
@@ -110,6 +123,23 @@ rule eval_rscape:
         ss = expand("data/{dataset}/ss.txt", dataset = RF),
     output:
         "data/eval_rscape.pickle"
+    localrule: True
+    script:
+        "eval.py"
+
+rule eval_phyloscore:
+    input:
+        scores = expand(
+            "data/{dataset}/reg{reg}_mireg{mireg}_score{score}_corr{corr}.npz",
+            score = ["optdiff"],
+            corr = ["APC"],
+            reg = [0.1,0.5,1.0],
+            mireg = [0.0],
+            dataset = RF
+        ),
+        ss = expand("data/{dataset}/ss.txt", dataset = RF),
+    output:
+        "data/eval_phyloscore.pickle"
     localrule: True
     script:
         "eval.py"
