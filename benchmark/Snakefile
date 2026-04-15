@@ -51,6 +51,7 @@ rule run_phylo_score:
         "data/{dataset, [^/]+}/reg{reg}_mireg{mireg}_cache.npz"
     output:
         "data/{dataset, [^/]+}/reg{reg}_mireg{mireg}_score{score}_corr{corr}.npz"
+    localrule: True
     shell:
         "python -m phylo_score --alignment {input[0]} --tree {input[1]} --lambda {wildcards.reg} --lambda-mi {wildcards.mireg} --score-type {wildcards.score} --correction {wildcards.corr} --output {output}"
 
@@ -71,22 +72,6 @@ rule run_phylo_score_cache:
 
 RF = list(map(str.strip, open("3d.txt", "r")))
 
-rule hyperparameter_collection:
-    input:
-        eval = expand(
-            "data/{dataset}/reg{reg}_mireg{mireg}_score{score}_corr{corr}.npz",
-            dataset = RF,
-            score = ["optdiff"],
-            corr = ["APC"],
-            reg = [0.5],
-            mireg = [0.01],
-        ),
-    output:
-        "data/hyper_temp.txt",
-    localrule: True
-    shell:
-        "touch {output}"
-
 rule rscape:
 	input:
 		"data/{dataset}/alignment.sto"
@@ -105,16 +90,6 @@ rule extract_rscape:
 	script:
 		"extract_rscape.py"
 
-rule eval:
-    input:
-        scores = "data/{dataset}/reg{reg}_mireg{mireg}_score{score}_corr{corr}.npz",
-        ss = "data/{dataset}/ss.txt",
-    output:
-        "data/{dataset}/eval_reg{reg}_mireg{mireg}_score{score}_corr{corr}.txt"
-    localrule: True
-    script:
-        "eval.py"
-
 rscape_scores = ["GTp", "GT", "GTa", "CHIa", "CHIp", "CHI", "MIa", "MIp", "MI", "MIr", "MIrp", "MIra", "MIg", "MIgp", "MIga", "OMES", "OMESa", "OMESp", "CCFp", "CCFa", "CCF"]
 
 rule eval_rscape:
@@ -131,8 +106,8 @@ rule eval_phyloscore:
     input:
         scores = expand(
             "data/{dataset}/reg{reg}_mireg{mireg}_score{score}_corr{corr}.npz",
-            score = ["optdiff"],
-            corr = ["APC"],
+            score = ["optdiff", "lldiff"],
+            corr = ["APC", "ASC", "None"],
             reg = [0.1,0.5,1.0],
             mireg = [0.0],
             dataset = RF
