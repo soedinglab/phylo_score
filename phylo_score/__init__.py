@@ -67,6 +67,7 @@ def optimize_models(
 
     if cache_path.exists():
         cached = np.load(cache_path)
+        print(f"Using cached results from {cache_path}")
         return (
                     np.array(cached["ind_ll"], copy=True),
                     np.array(cached["pair_ll"], copy=True),

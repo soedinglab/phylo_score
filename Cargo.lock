@@ -1452,7 +1452,7 @@ dependencies = [
 [[package]]
 name = "phylo_grad"
 version = "2.3.0"
-source = "git+https://github.com/soedinglab/phylo_grad?rev=eb7f384#eb7f3842df856fd29a81dc17971b20f7690dd20f"
+source = "git+https://github.com/soedinglab/phylo_grad?rev=e4376602f8d928be392d3b1f8489455c10fb38a2#e4376602f8d928be392d3b1f8489455c10fb38a2"
 dependencies = [
  "faer",
  "glam 0.30.10",

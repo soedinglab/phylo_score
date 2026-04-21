@@ -3,7 +3,7 @@
 use std::{path::Path, sync::Arc};
 
 use candle_core::Tensor;
-use phylo_score_rust::felsenstein::FelsensteinOp;
+use _phylo_score::felsenstein::FelsensteinOp;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 fn main() {
@@ -14,7 +14,7 @@ fn main() {
     let reg_strength = args[3].parse::<f64>().expect("Could not parse regularization strength");
     let mi_strength = args[4].parse::<f64>().expect("Could not parse mutual information regularization strength");
     let output_file = args[5].clone();
-    let sequences = phylo_score_rust::io::read_alignment(&Path::new(&fasta_file));
+    let sequences = _phylo_score::io::read_alignment(&Path::new(&fasta_file));
 
     let L = sequences.values().next().unwrap().len();
 
@@ -26,7 +26,7 @@ fn main() {
     }
 
     let (felsenstein, leaf_pl) =
-        phylo_score_rust::io::process_newick_alignment(&newick_tree, &sequences, pairs.iter().copied());
+        _phylo_score::io::process_newick_alignment(&newick_tree, &sequences, pairs.iter().copied());
 
     let felsenstein = Box::leak(Box::new(felsenstein));
 
@@ -44,16 +44,16 @@ fn main() {
     let results = leaf_pl
         .into_par_iter()
         .map(|pair| {
-            let mut model = phylo_score_rust::models::IndModel::new(reg_strength);
-            let ind_ll =phylo_score_rust::optimize_model(
+            let mut model = _phylo_score::models::IndModel::new(reg_strength);
+            let ind_ll = _phylo_score::optimize_model(
                 &mut model,
                 FelsensteinOp::new(felsenstein, pair.clone()),
                 2000,
                 0.01,
                 1e-6,
             );
-            let mut pair_model = phylo_score_rust::models::PairModel::new(mi_strength, &model);
-            let pair_ll = phylo_score_rust::optimize_model(
+            let mut pair_model = _phylo_score::models::PairModel::new(mi_strength, &model);
+            let pair_ll = _phylo_score::optimize_model(
                 &mut pair_model,
                 FelsensteinOp::new(felsenstein, pair),
                 2000,
