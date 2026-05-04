@@ -110,7 +110,7 @@ rule eval_phyloscore:
             score = ["optdiff", "lldiff"],
             corr = ["APC", "ASC", "None"],
             reg = [0.05,0.1, 0.25, 0.5, 1.0, 2.5, 5.0],
-            mireg = [0.0, 1.0, 10.0],
+            mireg = [0.0, 0.01, 0.1, 1.0, 10.0],
             dataset = RF
         ),
         ss = expand("data/{dataset}/ss.txt", dataset = RF),
