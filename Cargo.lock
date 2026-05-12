@@ -1471,6 +1471,7 @@ dependencies = [
  "phylo_grad",
  "phylotree",
  "pyo3",
+ "rand 0.8.5",
  "rayon",
  "seq_io",
 ]

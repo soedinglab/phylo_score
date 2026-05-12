@@ -3,6 +3,7 @@
 pub mod felsenstein;
 pub mod io;
 pub mod models;
+pub mod null_alignment;
 
 use numpy::PyArray1;
 use pyo3::prelude::*;
