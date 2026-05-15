@@ -1,7 +1,8 @@
 import argparse
 import numpy as np
+from pathlib import Path
 
-from . import optimize_models, utils
+from . import optimize_models, utils, _phylo_score
 
 def main():
     parser = argparse.ArgumentParser(description="Compute co-evolution scores using phylogeny.")
@@ -46,6 +47,14 @@ def main():
         choices=["APC", "ASC", "None"],
         help="Type of correction to apply to the scores (default: %(default)s).",
     )
+    parser.add_argument(
+        "--p_values",
+        dest="p_values",
+        type=str,
+        default="null_alignment",
+        choices=["null_alignment", "fast"],
+        help="Type of p_value calculation. Either null_alignment or fast, (default: %(default)s).",
+    )
     args = parser.parse_args()
     
     if args.num_threads > 0:
@@ -59,10 +68,29 @@ def main():
         args.lambda_mi,
         cache_dir=args.cache_dir,
     )
+    
+    if args.p_values == "null_alignment":
+        fasta_path = Path(args.alignment)
+        null_fasta = fasta_path.parent / (fasta_path.stem + "_null.fasta")
+        _phylo_score.null_alignment(str(fasta_path), args.tree, str(null_fasta), 0)
+        null_ind_ll, null_pair_ll, null_ind_reg, null_pair_reg = optimize_models(
+            args.tree,
+            null_fasta,
+            args.lam,
+            args.lambda_mi,
+            cache_dir=args.cache_dir,
+        )
+        null_scores = utils.calc_scores(null_ind_ll, null_pair_ll, null_ind_reg, null_pair_reg, args.score_type)
+        null_corrected_scores = utils.calc_correction(null_scores, args.correction)
+        
 
     scores = utils.calc_scores(ind_ll, pair_ll, ind_reg, pair_reg, args.score_type)
     corrected_scores = utils.calc_correction(scores, args.correction)
-    p_vals = utils.p_values(corrected_scores)
+    
+    if args.p_values == "null_alignment":
+        p_vals = utils.p_values_with_null(corrected_scores, null_corrected_scores)
+    else:
+        p_vals = utils.p_values(corrected_scores)
 
     # Save the results to the output file npz format
     np.savez_compressed(

@@ -62,6 +62,17 @@ pub fn optimize_model(
 }
 
 #[pyfunction]
+#[pyo3(name = "null_alignment")]
+fn null_alignment_py(fasta_file: String, newick_file : String, output_file: String, seed: u64) -> PyResult<()> {
+    let sequences = crate::io::read_alignment(&std::path::Path::new(&fasta_file));
+    let newick = std::fs::read_to_string(&newick_file).expect("Could not read newick file");
+    let null_seqs = crate::null_alignment::generate_null_alignment(&newick, &sequences, seed).unwrap();
+    let order = crate::io::read_seq_names(&std::path::Path::new(&fasta_file));
+    crate::io::write_fasta(&std::path::Path::new(&output_file), &order, &null_seqs)?;
+    Ok(())
+}
+
+#[pyfunction]
 #[pyo3(name = "optimize_models")]
 fn optimize_models_py<'py>(
     py: Python<'py>,
@@ -143,5 +154,6 @@ fn optimize_models_py<'py>(
 #[pyo3(name = "_phylo_score")]
 fn phylo_score_mod<'py>(_py: Python<'py>, m: &Bound<'py, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(optimize_models_py, m)?)?;
+    m.add_function(wrap_pyfunction!(null_alignment_py, m)?)?;
     Ok(())
 }

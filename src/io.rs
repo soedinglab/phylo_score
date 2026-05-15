@@ -113,3 +113,35 @@ pub fn process_newick_alignment(
     let felsenstein = phylo_grad::FelsensteinTree::<16>::new(&parents, &distances);
     (felsenstein, leaf_pl)
 }
+
+pub fn read_seq_names(fasta_file: &Path) -> Vec<String> {
+    let mut alignment = seq_io::fasta::Reader::new(
+        std::fs::File::open(fasta_file).expect("Could not open fasta file"),
+    );
+    let mut names = vec![];
+    while let Some(result) = alignment.next() {
+        let record = result.expect("Error reading fasta record");
+        names.push(record.id().unwrap().to_string());
+    }
+    names
+}
+
+pub fn write_fasta(
+    output_path: &Path,
+    order: &[String],
+    null_alignment: &HashMap<String, Vec<u8>>,
+) -> std::io::Result<()> {
+    use std::io::Write;
+    let mut writer = std::io::BufWriter::new(std::fs::File::create(output_path)?);
+    for id in order {
+        let seq = null_alignment
+            .get(id)
+            .unwrap_or_else(|| panic!("Null alignment missing sequence for '{id}'"));
+        writer.write_all(b">")?;
+        writer.write_all(id.as_bytes())?;
+        writer.write_all(b"\n")?;
+        writer.write_all(seq)?;
+        writer.write_all(b"\n")?;
+    }
+    writer.flush()
+}

@@ -96,6 +96,22 @@ def p_values(scores):
 
     fit = scipy.stats.gamma.fit(sort_scores, method='mle')
     
+    print("Gamma distribution fit parameters (shape, loc, scale):")
+    print(fit)
+
+    p_vals = scipy.stats.gamma.sf(scores, *fit)
+
+    return p_vals
+
+
+def p_values_with_null(scores, null_scores):
+
+    assert(scores == scores).all()
+    assert(null_scores == null_scores).all()
+
+    fit = scipy.stats.gamma.fit(null_scores, method='mle')
+    
+    print("Gamma distribution fit parameters (shape, loc, scale) for null alignment:")
     print(fit)
 
     p_vals = scipy.stats.gamma.sf(scores, *fit)
