@@ -1,8 +1,18 @@
+from pathlib import Path
+
 import numpy as np
 import scipy
 
 def all_pairs_numpy(k : int) -> tuple[np.ndarray, np.ndarray]:
     return np.triu_indices(k, k=1)
+
+
+def pair_columns_from_num_pairs(num_pairs: int, one_based: bool = True) -> tuple[np.ndarray, np.ndarray]:
+    length = reverse_triangle_number(num_pairs) + 1
+    row_indices, col_indices = all_pairs_numpy(length)
+    if one_based:
+        return row_indices + 1, col_indices + 1
+    return row_indices, col_indices
 
 def reverse_triangle_number(n: int) -> int:
     """
@@ -117,3 +127,49 @@ def p_values_with_null(scores, null_scores):
     p_vals = scipy.stats.gamma.sf(scores, *fit)
 
     return p_vals
+
+
+def write_pair_scores_csv(
+    output_path,
+    scores,
+    corrected_scores,
+    fast_p_values,
+    null_p_values,
+    ind_ll,
+    pair_ll,
+    ind_reg,
+    pair_reg,
+):
+    output_path = Path(output_path)
+    column_i, column_j = pair_columns_from_num_pairs(len(scores), one_based=True)
+
+    columns = [
+        column_i,
+        column_j,
+        scores,
+        corrected_scores,
+        fast_p_values,
+    ]
+    header = [
+        "column_i",
+        "column_j",
+        "uncorrected_score",
+        "corrected_score",
+        "fast_p_value",
+        "null_p_value",
+    ]
+
+    if null_p_values is not None:
+        columns.append(null_p_values)
+    else:
+        columns.append(np.full_like(scores, np.nan))
+
+    data = np.column_stack(columns)
+    np.savetxt(
+        output_path,
+        data,
+        delimiter=",",
+        header=",".join(header),
+        comments="",
+        fmt=["%d", "%d"] + ["%.18g"] * (data.shape[1] - 2),
+    )

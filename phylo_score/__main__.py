@@ -88,20 +88,38 @@ def main():
     corrected_scores = utils.calc_correction(scores, args.correction)
     
     if args.p_values == "null_alignment":
-        p_vals = utils.p_values_with_null(corrected_scores, null_corrected_scores)
+        null_p_vals = utils.p_values_with_null(corrected_scores, null_corrected_scores)
     else:
-        p_vals = utils.p_values(corrected_scores)
+        null_p_vals = None
+    
+    p_vals = utils.p_values(corrected_scores)
 
     # Save the results to the output file npz format
     np.savez_compressed(
         args.output,
-        scores=scores,
+        uncorrected_scores=scores,
         corrected_scores=corrected_scores,
-        p_values=p_vals,
+        fast_p_values=p_vals,
+        null_p_values=null_p_vals,
         ind_ll=ind_ll,
         pair_ll=pair_ll,
         ind_reg=ind_reg,
         pair_reg=pair_reg,
     )
+
+    csv_output = Path(args.output).with_suffix(".csv")
+    utils.write_pair_scores_csv(
+        csv_output,
+        scores=scores,
+        corrected_scores=corrected_scores,
+        fast_p_values=p_vals,
+        null_p_values=null_p_vals,
+        ind_ll=ind_ll,
+        pair_ll=pair_ll,
+        ind_reg=ind_reg,
+        pair_reg=pair_reg,
+    )
+    
+    
 if __name__ == "__main__":
     main()
