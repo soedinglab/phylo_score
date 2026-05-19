@@ -99,13 +99,13 @@ rule run_phylo_score:
     input:
         "data/{dataset}/alignment.fasta",
         "data/{dataset}/raxml.newick",
-        "data/{dataset, [^/]+}/reg{reg}_mireg{mireg}_cache.npz",
+        "data/{dataset}/reg{reg}_mireg{mireg}_cache.npz",
         "../phylo_score/utils.py"
     output:
-        "data/{dataset, [^/]+}/reg{reg}_mireg{mireg}_score{score}_corr{corr}.npz"
+        "data/{dataset, [^/]+}/reg{reg}_mireg{mireg}_score{score}_corr{corr, [^_]+}.npz"
     localrule: True
     shell:
-        "python -m phylo_score --alignment {input[0]} --tree {input[1]} --lambda {wildcards.reg} --lambda-mi {wildcards.mireg} --score-type {wildcards.score} --correction {wildcards.corr} --output {output}"
+        "python -m phylo_score --alignment {input[0]} --tree {input[1]} --lambda {wildcards.reg} --lambda-mi {wildcards.mireg} --score-type {wildcards.score} --correction {wildcards.corr} --p_values fast --output {output}"
 
 # We first run phylo_score to populate the cache which is the expensive run.
 # This depends only on the regularization strength and not correction and score type.
@@ -120,7 +120,20 @@ rule run_phylo_score_cache:
         mem_mb = 200000,
         runtime = 10000
     shell:
-        "python -m phylo_score --alignment {input[0]} --tree {input[1]} --lambda {wildcards.reg} --lambda-mi {wildcards.mireg} --score-type optdiff --correction APC --output {output}"
+        "python -m phylo_score --alignment {input[0]} --tree {input[1]} --lambda {wildcards.reg} --lambda-mi {wildcards.mireg} --score-type optdiff --correction APC --p_values fast --output {output}"
+
+rule run_phylo_score_with_null:
+    input:
+        "data/{dataset}/alignment.fasta",
+        "data/{dataset}/raxml.newick"
+    output:
+        "data/{dataset, [^/]+}/reg{reg}_mireg{mireg}_score{score}_corr{corr}_with_null.npz"
+    threads: 64
+    resources:
+        mem_mb = 200000,
+        runtime = 10000
+    shell:
+        "python -m phylo_score --alignment {input[0]} --tree {input[1]} --lambda {wildcards.reg} --lambda-mi {wildcards.mireg} --score-type {wildcards.score} --correction {wildcards.corr} --p_values null_alignment --output {output}"
 
 RF = list(map(str.strip, open("3d.txt", "r")))
 RF_null = [f"{dataset}_mynull" for dataset in RF]
@@ -155,19 +168,7 @@ rule eval_rscape:
     script:
         "eval.py"
 
-rule null_scores:
-    input:
-        scores = expand(
-            "data/{dataset}/reg0.5_mireg0.01_scoreoptdiff_corrAPC.npz",
-            dataset = RF_null
-        ),
-        ss = expand("data/{dataset}/ss.txt", dataset = RF_null),
-    output:
-        "data/null_scores"
-    localrule: True
-    shell:
-        "touch {output}"
-rule eval_phyloscore:
+rule eval_hyper_phyloscore:
     input:
         scores = expand(
             "data/{dataset}/reg{reg}_mireg{mireg}_score{score}_corr{corr}.npz",
@@ -184,22 +185,12 @@ rule eval_phyloscore:
     script:
         "eval.py"
 
-rule eval_joint:
+rule all_phylo_score:
     input:
-        scores = expand("data/{dataset}/reg0.5_mireg0.0_scoreoptdiff_corrAPC.npz", dataset = RF),
-        ss = expand("data/{dataset}/ss.txt", dataset = RF),
+        best_scores = expand("data/{dataset}/reg0.5_mireg0.01_scoreoptdiff_corrAPC_with_null.npz", dataset = RF),
+        worst_scores = expand("data/{dataset}/reg1.0_mireg1.0_scoreoptdiff_corrAPC_with_null.npz", dataset = RF),
     output:
-        "data/eval_joint_phyloscore.pickle"
+        "data/run_all_phyloscore"
     localrule: True
-    script:
-        "eval_joint.py"
-    
-rule eval_joint_rscape:
-    input:
-        scores = expand("data/{dataset}/rscape_GTp.npz", score = rscape_scores, dataset = RF),
-        ss = expand("data/{dataset}/ss.txt", dataset = RF),
-    output:
-        "data/eval_joint_rscape.pickle"
-    localrule: True
-    script:
-        "eval_joint.py"
+    shell:
+        "touch {output}"

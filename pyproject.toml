@@ -8,7 +8,7 @@ module-name = "phylo_score._phylo_score"
 [project]
 name = "phylo_score"
 version = "1.0.0"
-dependencies = ["numpy", "biopython", "scipy"]
+dependencies = ["numpy", "scipy"]
 
 [project.urls]
 Repository = "https://github.com/soedinglab/phylo_score"
