@@ -41,8 +41,13 @@ def roc_avarage_precision(score_file : str, ss_file :str):
 
     mask = [p in true_pairs for p in zip(all_pairs[0], all_pairs[1])]
 
-    roc = roc_auc_score(mask, -scores['p_values'])
-    ap = average_precision_score(mask, -scores['p_values'])
+    if "scores" in scores:
+        scores = scores['scores']
+    else:
+        scores = scores['corrected_scores']
+
+    roc = roc_auc_score(mask, scores)
+    ap = average_precision_score(mask, scores)
 
     return roc, ap
 

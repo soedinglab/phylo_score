@@ -3,6 +3,8 @@ use rand::seq::SliceRandom;
 use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
 
+// This is a reimplementation of R-Scapes Null alignment generation
+
 const STATE_A: u8 = 1 << 0;
 const STATE_C: u8 = 1 << 1;
 const STATE_G: u8 = 1 << 2;
