@@ -31,57 +31,6 @@ rule prepare_rfam:
     shell:
         "python {input[0]} {input[1]} {output[0]} {output[1]} {output[2]}"
 
-ruleorder: null_alignment > prepare_rfam
-ruleorder: null_ss > prepare_rfam
-ruleorder: null_fasta > prepare_rfam
-ruleorder: my_null_fasta > prepare_rfam
-
-rule rscape_null_align:
-	input:
-		"data/{dataset}/alignment.sto"
-	output:
-		"data/{dataset}/null_alignments.sto"
-	localrule: True
-	shell:
-		"./R-scape --outdir data/{wildcards.dataset}/rscape --gapthresh 1.0 --outname null --outnull --nshuffle 100 {input} && mv data/{wildcards.dataset}/rscape/null.null.sto {output}"
-
-rule null_alignment:
-	input:
-		"data/{dataset}/null_alignments.sto"
-	output:
-		"data/{dataset}_null{number}/alignment.sto"
-	localrule: True
-	shell:
-		"""awk -v n={wildcards.number} 'BEGIN{{RS="//\\n"; ORS="//\\n"}} NR==n' {input} > {output}"""
-
-rule null_ss:
-	input:
-		"data/{dataset}/ss.txt"
-	output:
-		"data/{dataset}_{null}/ss.txt"
-	localrule: True
-	shell:
-		"cp {input} {output}"
-
-rule null_fasta:
-	input:
-		"data/{dataset}_null{number}/alignment.sto"
-	output:
-		"data/{dataset}_null{number}/alignment.fasta"
-	localrule: True
-	shell:
-		"esl-reformat afa {input} > {output}"
-
-rule my_null_fasta:
-    input:
-        "data/{dataset}/alignment.fasta",
-        "data/{dataset}/raxml.newick"
-    output:
-        "data/{dataset}_mynull/alignment.fasta"
-    localrule: True
-    shell:
-        "cargo run --manifest-path ../Cargo.toml --bin null_alignment {input[1]} {input[0]} {output}"
-
 rule phylogeny:
     input:
         "data/{dataset}/alignment.fasta"
@@ -115,7 +64,7 @@ rule run_phylo_score_cache:
         "data/{dataset}/raxml.newick"
     output:
         "data/{dataset, [^/]+}/reg{reg}_mireg{mireg}_cache.npz"
-    threads: 64
+    threads: 16
     resources:
         mem_mb = 200000,
         runtime = 10000

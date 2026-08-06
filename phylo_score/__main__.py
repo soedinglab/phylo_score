@@ -14,14 +14,14 @@ def main():
         "--lambda",
         dest="lam",
         type=float,
-        default=1.0,
+        default=0.5,
         help="lambda parameter (default: %(default)s).",
     )
     parser.add_argument(
         "--lambda-mi",
         dest="lambda_mi",
         type=float,
-        default=1.0,
+        default=0.01,
         help="lambda_MI parameter (default: %(default)s).",
     )
     parser.add_argument(
@@ -29,7 +29,7 @@ def main():
         dest="cache_dir",
         type=str,
         default=None,
-        help="Directory to use for caching intermediate results. If not specified we use ./phylo_score_cache.",
+        help="Directory to use for caching intermediate results. If not specified we use ./phylo_score_cache",
     )
     parser.add_argument(
         "--score-type",
