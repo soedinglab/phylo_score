@@ -9,6 +9,7 @@ module-name = "phylo_score._phylo_score"
 name = "phylo_score"
 version = "1.0.0"
 dependencies = ["numpy", "scipy"]
+license = "MIT OR Apache-2.0"
 
 [project.urls]
 Repository = "https://github.com/soedinglab/phylo_score"
