@@ -82,6 +82,20 @@ def analyse_rscape_file_name(rscape_file : str):
     else:
         raise ValueError(f"Rscape file name {rscape_file} does not match the expected pattern.")
 
+def analyse_comap_file_name(comap_file : str):
+    """
+        Given a comap file name, extract the dataset and the score variant.
+    """
+    import re
+    pattern = r"data/([^/]+)/comap_([^\.]+)\.npz"
+    match = re.match(pattern, comap_file)
+    if match:
+        dataset = match.group(1)
+        variant = match.group(2)
+        return dataset, variant
+    else:
+        raise ValueError(f"Comap file name {comap_file} does not match the expected pattern.")
+
 all_eval = {}
 
 import itertools
@@ -91,6 +105,9 @@ for score, ss in zip(snakemake.input.scores, itertools.cycle(snakemake.input.ss)
     print(f"Score file: {score}, ROC AUC: {roc}, Average Precision: {ap}, ss file: {ss}")
     if "rscape" in str(snakemake.output):
         para = analyse_rscape_file_name(score)
+        all_eval[para] = (roc, ap)
+    elif "comap" in str(snakemake.output):
+        para = analyse_comap_file_name(score)
         all_eval[para] = (roc, ap)
     else:
         para = analyse_score_file_name(score)

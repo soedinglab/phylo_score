@@ -1,0 +1,40 @@
+# CoMap (v1.5.5) options for the benchmark, see COMAP.md.
+# Run from data/{dataset}/comap with ALN=<alignment> TREE=<newick>.
+alphabet = RNA
+input.sequence.file = $(ALN)
+input.sequence.format = Fasta
+input.sequence.sites_to_use = all
+input.sequence.max_gap_allowed = 100%
+# Keep constant sites so that the output indices are the alignment columns
+input.remove_const = no
+input.sequence.file2 = none
+input.tree.file = $(TREE)
+input.tree.format = Newick
+
+# GTR+G refitted on the RAxML-NG tree, without changing the topology
+model = GTR
+rate_distribution = Gamma(n=4, alpha=0.5)
+optimization = FullD(derivatives=Newton)
+optimization.reparametrization = no
+optimization.max_number_f_eval = 10000
+optimization.tolerance = 0.000001
+optimization.topology = no
+optimization.message_handler = none
+optimization.profiler = none
+output.tree.file = comap_tree.dnd
+output.estimates = comap_params.txt
+
+input.vectors.file = none
+output.vectors.file = none
+# The bundled RNA example uses "simple", which is no longer a valid option
+nijt = Uniformization
+
+analysis = pairwise
+statistic = Correlation
+statistic.output.file = comap.sta
+statistic.null = true
+statistic.null.nb_rep_CPU = 100
+statistic.null.nb_rep_RAM = 1000
+statistic.null.output.file = none
+statistic.null.compute_pvalue = yes
+statistic.null.nb_rate_classes = 10

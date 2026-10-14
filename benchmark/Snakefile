@@ -105,6 +105,42 @@ rule extract_rscape:
 	script:
 		"extract_rscape.py"
 
+comap_variants = ["corr", "corrAPC", "pvalue"]
+
+rule comap:
+    input:
+        alignment = "data/{dataset}/alignment.fasta",
+        tree = "data/{dataset}/raxml.newick",
+        param = "comap.bpp"
+    output:
+        "data/{dataset, [^/]+}/comap/comap.sta"
+    resources:
+        mem_mb = 10000,
+        runtime = 300
+    shell:
+        "cd data/{wildcards.dataset}/comap && comap param=../../../{input.param} ALN=../alignment.fasta TREE=../raxml.newick > comap.log"
+
+rule extract_comap:
+    input:
+        "extract_comap.py",
+        "data/{dataset}/comap/comap.sta",
+        "data/{dataset}/ss.txt"
+    output:
+        expand("data/{{dataset, [^/]+}}/comap_{variant}.npz", variant = comap_variants)
+    localrule: True
+    shell:
+        "python {input[0]} {input[1]} {input[2]} {output}"
+
+rule eval_comap:
+    input:
+        scores = expand("data/{dataset}/comap_{variant}.npz", variant = comap_variants, dataset = RF_comap),
+        ss = expand("data/{dataset}/ss.txt", dataset = RF),
+    output:
+        "data/eval_comap.pickle"
+    localrule: True
+    script:
+        "eval.py"
+
 rscape_scores = ["GTp", "GT", "GTa", "CHIa", "CHIp", "CHI", "MIa", "MIp", "MI", "MIr", "MIrp", "MIra", "MIg", "MIgp", "MIga", "OMES", "OMESa", "OMESp", "CCFp", "CCFa", "CCF"]
 
 rule eval_rscape:
