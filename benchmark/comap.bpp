@@ -1,4 +1,4 @@
-# CoMap (v1.5.5) options for the benchmark, see COMAP.md.
+# CoMap (v1.5.5) options for the benchmark
 # Run from data/{dataset}/comap with ALN=<alignment> TREE=<newick>.
 alphabet = RNA
 input.sequence.file = $(ALN)

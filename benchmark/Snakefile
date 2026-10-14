@@ -118,7 +118,7 @@ rule comap:
         mem_mb = 10000,
         runtime = 300
     shell:
-        "cd data/{wildcards.dataset}/comap && comap param=../../../{input.param} ALN=../alignment.fasta TREE=../raxml.newick > comap.log"
+        "cd data/{wildcards.dataset}/comap && ../../../comap param=../../../{input.param} ALN=../alignment.fasta TREE=../raxml.newick > comap.log"
 
 rule extract_comap:
     input:
@@ -131,10 +131,13 @@ rule extract_comap:
     shell:
         "python {input[0]} {input[1]} {input[2]} {output}"
 
+failed_comap = ["RF00005", "RF03064"]
+RF_comap = [dataset for dataset in RF if dataset not in failed_comap]
+
 rule eval_comap:
     input:
         scores = expand("data/{dataset}/comap_{variant}.npz", variant = comap_variants, dataset = RF_comap),
-        ss = expand("data/{dataset}/ss.txt", dataset = RF),
+        ss = expand("data/{dataset}/ss.txt", dataset = RF_comap),
     output:
         "data/eval_comap.pickle"
     localrule: True
