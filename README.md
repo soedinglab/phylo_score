@@ -41,3 +41,21 @@ options:
   --p_values {null_alignment,fast}
                         Type of p_value calculation. Either null_alignment or fast, (default: null_alignment).
 ```
+
+## Running the benchmark
+
+The benchmark is one Snakemake pipeline. The Rfam seed alignments used are part of this repository. The RaxML trees are also commited, but can be recreated using snakemake.
+
+To run it the following things are need:
+
+- phylo_score
+- snakemake
+- sklearn
+- pandas
+- biopython
+
+A Linux binary of R-scape and CoMap is also in the repository, they can be replaced with systems one in the Snakefile.
+
+The benchmarks can than be run with `snakemake data/eval_phyloscore.pickle` `snakemake data/eval_rscape.pickle` `snakemake data/eval_comap.pickle` in the `benchmark` folder.
+
+Our final runs are also comitted. The jupyter notebooks can be used to recreate the plots of the paper.
